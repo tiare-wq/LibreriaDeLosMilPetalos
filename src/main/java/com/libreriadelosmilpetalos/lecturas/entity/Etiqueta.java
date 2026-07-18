@@ -28,7 +28,7 @@ public class Etiqueta {
     private Long id;
 
     @Column(nullable = false)
-    private ListaEtiquetas descripcion;
+    private RepoEtiquetas descripcion;
 
     @ManyToOne
     @JoinColumn(name = "id_libro")

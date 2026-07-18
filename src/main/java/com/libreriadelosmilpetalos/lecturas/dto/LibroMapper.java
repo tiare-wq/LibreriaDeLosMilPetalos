@@ -24,7 +24,7 @@ public class LibroMapper {
         dto.setFechaIngreso(entidad.getFechaIngreso());
         dto.setEtiquetas(entidad.getEtiquetas()
             .stream()
-            .map(e -> EtiquetaMapper.toDTO(e))
+            .map(EtiquetaMapper::toDTO)
             .toList());
 
         return dto;

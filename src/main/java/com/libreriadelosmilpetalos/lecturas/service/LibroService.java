@@ -11,7 +11,9 @@ import com.libreriadelosmilpetalos.lecturas.dto.EtiquetaDTO;
 import com.libreriadelosmilpetalos.lecturas.dto.LibroDTO;
 import com.libreriadelosmilpetalos.lecturas.dto.LibroMapper;
 import com.libreriadelosmilpetalos.lecturas.entity.Etiqueta;
+import com.libreriadelosmilpetalos.lecturas.entity.Genero;
 import com.libreriadelosmilpetalos.lecturas.entity.Libro;
+import com.libreriadelosmilpetalos.lecturas.entity.RepoEtiquetas;
 import com.libreriadelosmilpetalos.lecturas.exception.ResourceAlreadyExistsException;
 import com.libreriadelosmilpetalos.lecturas.exception.ResourceNotFoundException;
 import com.libreriadelosmilpetalos.lecturas.repository.LibroRepository;
@@ -78,6 +80,49 @@ public class LibroService {
             .orElseThrow(() -> new ResourceNotFoundException("No se encuentra el libro: " + ttlNormalizado));
             
         return LibroMapper.toDTO(libro);
+    }
+
+    // ==========================================
+    // MÉTODOS DE BÚSQUEDA PERSONALIZADA
+    // ==========================================
+
+    public Page<LibroDTO> buscarSimilaresTituloAutor(String texto, Pageable pageable) {
+        log.info("Inicia la búsqueda por título");
+        log.debug("texto: {}", texto);
+
+        String busqueda = normalizar(texto);
+
+        return repo.findWhenContainingText(busqueda, pageable)
+            .map(LibroMapper::toDTO);
+    }
+
+    public Page<LibroDTO> buscarPorGeneroEtiqueta(List<Genero> generos, List<EtiquetaDTO> etiquetas, Pageable pageable) {
+        log.info("Inicia la búsqueda por género o etiquetas");
+        log.debug("generos: {}, etiquetas: {}", generos, etiquetas);
+
+        List<RepoEtiquetas> etiqDesc = etiquetas
+            .stream()
+            .map(EtiquetaDTO::getDescripcion)
+            .toList();
+
+        return repo.findByGeneroAndEtiqueta(generos, etiqDesc, pageable)
+            .map(LibroMapper::toDTO);
+    }
+
+    public Page<LibroDTO> buscarEntreFechas(LocalDate inicio, LocalDate termino, Pageable pageable) {
+        log.info("Buscando libros ingresados entre fechas");
+        log.debug("inicio: {}, termino: {}", inicio, termino);
+
+        if (inicio.isAfter(termino)) {
+            throw new IllegalArgumentException("La fecha de inicio es posterior a la fecha de término");
+        } else if(inicio.isBefore(LocalDate.parse("01/01/2026"))) {
+            throw new IllegalArgumentException("No hay registros disponibles antes de la fecha 2026");
+        } else if (termino.isAfter(LocalDate.parse("31/12/2100"))) {
+            throw new IllegalArgumentException("El rango de fechas no es válido");
+        }
+
+        return repo.findByFechaIngresoBetween(inicio, termino, pageable)
+            .map(LibroMapper::toDTO);
     }
 
     // ==========================================

@@ -1,6 +1,6 @@
 package com.libreriadelosmilpetalos.lecturas.entity;
 
-public enum ListaEtiquetas {
+public enum RepoEtiquetas {
     AVENTURA_EPICA,
     DOCUMENTACION_TECNICA,
     FANTASIA,
