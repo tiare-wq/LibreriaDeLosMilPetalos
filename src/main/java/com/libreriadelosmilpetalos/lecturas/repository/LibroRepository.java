@@ -25,28 +25,51 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     @EntityGraph(attributePaths = {"etiquetas"})
     Page<Libro> findByFechaIngresoBetween(LocalDate inicio, LocalDate termino, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"etiquetas"})
-    @Query("""
+    @EntityGraph(value = "etiquetas-de-libro", type = EntityGraph.EntityGraphType.FETCH)
+    @Query(value = """
     SELECT l
     FROM Libro l
-    HAVING COUNT(SELECT *
-        FROM etiquetas
-        WHERE)
-    JOIN FETCH l.etiquetas e
-    WHERE l.etiquetas ALL :filtros
-    AND l.genero LIKE :filtros
+    WHERE (:generos IS NULL OR l.genero IN :generos)
+    AND (SELECT COUNT(e)
+        FROM Etiqueta e
+        WHERE e.libro.id = l.id
+        AND e.descripcion IN :etiquetas
+    ) >= :cantidad
+    """,
+    countQuery = """
+    SELECT COUNT(1)
+    FROM Libro l
+    WHERE (:generos IS NULL OR l.genero IN :generos)
+    AND (SELECT COUNT(e)
+        FROM Etiqueta e
+        WHERE e.libro.id = l.id
+        AND e.descripcion IN :etiquetas
+    ) >= :cantidad
     """)
-    Page<Libro> findByGeneroAndEtiqueta(List<Genero> generos, List<RepoEtiquetas> etiquetas, Pageable pageable);
+    Page<Libro> findByGeneroAndEtiqueta(
+        @Param("generos") List<Genero> generos,
+        @Param("etiquetas") List<RepoEtiquetas> etiquetas,
+        @Param("cantidad") Integer cantidad,
+        Pageable pageable);
     
-    @EntityGraph(attributePaths = {"etiquetas"})
+    @EntityGraph(value = "etiquetas-de-libro", type = EntityGraph.EntityGraphType.FETCH)
     Optional<Libro> findByTituloIgnoreCase(String titulo);
 
-    @EntityGraph(attributePaths = {"etiquetas"})
-    @Query("""
+    @EntityGraph(value = "etiquetas-de-libro", type = EntityGraph.EntityGraphType.FETCH)
+    @Query(
+    value = """
     SELECT l
     FROM Libro l
     WHERE LOWER(l.titulo) LIKE LOWER(CONCAT('%', :texto, '%'))
        OR LOWER(l.autor) LIKE LOWER(CONCAT('%', :texto, '%'))
+    """,
+    countQuery = """
+    SELECT COUNT(1)
+    FROM Libro l
+    WHERE LOWER(l.titulo) LIKE LOWER(CONCAT('%', :texto, '%'))
+       OR LOWER(l.autor) LIKE LOWER(CONCAT('%', :texto, '%'))
     """)
-    Page<Libro> findWhenContainingText(@Param("texto") String texto, Pageable pageable);
+    Page<Libro> findWhenContainingText(
+        @Param("texto") String texto,
+        Pageable pageable);
 }

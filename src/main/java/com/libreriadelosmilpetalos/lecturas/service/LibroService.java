@@ -1,6 +1,7 @@
 package com.libreriadelosmilpetalos.lecturas.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -8,10 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.libreriadelosmilpetalos.lecturas.dto.EtiquetaDTO;
+import com.libreriadelosmilpetalos.lecturas.dto.GeneroEtiquetaDTO;
 import com.libreriadelosmilpetalos.lecturas.dto.LibroDTO;
 import com.libreriadelosmilpetalos.lecturas.dto.LibroMapper;
 import com.libreriadelosmilpetalos.lecturas.entity.Etiqueta;
-import com.libreriadelosmilpetalos.lecturas.entity.Genero;
 import com.libreriadelosmilpetalos.lecturas.entity.Libro;
 import com.libreriadelosmilpetalos.lecturas.entity.RepoEtiquetas;
 import com.libreriadelosmilpetalos.lecturas.exception.ResourceAlreadyExistsException;
@@ -86,7 +87,7 @@ public class LibroService {
     // MÉTODOS DE BÚSQUEDA PERSONALIZADA
     // ==========================================
 
-    public Page<LibroDTO> buscarSimilaresTituloAutor(String texto, Pageable pageable) {
+    public Page<LibroDTO> buscarPorTituloAutor(String texto, Pageable pageable) {
         log.info("Inicia la búsqueda por título");
         log.debug("texto: {}", texto);
 
@@ -96,16 +97,23 @@ public class LibroService {
             .map(LibroMapper::toDTO);
     }
 
-    public Page<LibroDTO> buscarPorGeneroEtiqueta(List<Genero> generos, List<EtiquetaDTO> etiquetas, Pageable pageable) {
+    public Page<LibroDTO> buscarPorGeneroEtiqueta(GeneroEtiquetaDTO filtros, Pageable pageable) {
         log.info("Inicia la búsqueda por género o etiquetas");
-        log.debug("generos: {}, etiquetas: {}", generos, etiquetas);
+        log.debug("filtros: {}", filtros);
 
-        List<RepoEtiquetas> etiqDesc = etiquetas
+        List<EtiquetaDTO> etiq = filtros.getEtiquetas();
+        List<RepoEtiquetas> etiqDesc;
+
+        if (etiq != null && !etiq.isEmpty()) {
+            etiqDesc = etiq
             .stream()
             .map(EtiquetaDTO::getDescripcion)
             .toList();
+        } else {
+            etiqDesc = new ArrayList<>();
+        }
 
-        return repo.findByGeneroAndEtiqueta(generos, etiqDesc, pageable)
+        return repo.findByGeneroAndEtiqueta(filtros.getGeneros(), etiqDesc, etiqDesc.size(), pageable)
             .map(LibroMapper::toDTO);
     }
 
@@ -117,7 +125,7 @@ public class LibroService {
             throw new IllegalArgumentException("La fecha de inicio es posterior a la fecha de término");
         } else if(inicio.isBefore(LocalDate.parse("01/01/2026"))) {
             throw new IllegalArgumentException("No hay registros disponibles antes de la fecha 2026");
-        } else if (termino.isAfter(LocalDate.parse("31/12/2100"))) {
+        } else if (termino.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("El rango de fechas no es válido");
         }
 
@@ -137,6 +145,8 @@ public class LibroService {
 
         Libro entidad = repo.findByTituloIgnoreCase(dto.getTitulo())
             .orElseThrow(() -> new ResourceNotFoundException("No se encuentra el libro: " + libro.getTitulo()));
+
+        dto.setFechaActualizacion(LocalDate.now());
 
         List<EtiquetaDTO> etiquetas = etiquetaService.actualizarEtiqueta(entidad, dto.getEtiquetas());
 

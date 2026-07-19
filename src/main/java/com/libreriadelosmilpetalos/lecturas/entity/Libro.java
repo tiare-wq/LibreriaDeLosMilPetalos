@@ -5,6 +5,8 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,8 +25,8 @@ import lombok.Setter;
 @AllArgsConstructor
 
 @NamedEntityGraph(
-    name = "etiquetas-relacionadas",
-    attributeNodes = {@NamedAttributeNode("etiqueta")})
+    name = "etiquetas-de-libro",
+    attributeNodes = {@NamedAttributeNode("etiquetas")})
 @Entity
 @Table(name = "libro")
 public class Libro {
@@ -45,10 +47,11 @@ public class Libro {
     @Column(nullable = false)
     private Float valoracion;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Genero genero;
 
-    @Column(name = "fecha_ingreso")
+    @Column(name = "fecha_actualizacion")
     private LocalDate fechaActualizacion;
 
     @Column(name = "fecha_ingreso", nullable = false)

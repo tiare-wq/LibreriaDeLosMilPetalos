@@ -3,11 +3,14 @@ package com.libreriadelosmilpetalos.lecturas.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.libreriadelosmilpetalos.lecturas.dto.GeneroEtiquetaDTO;
 import com.libreriadelosmilpetalos.lecturas.dto.LibroDTO;
 import com.libreriadelosmilpetalos.lecturas.service.LibroService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDate;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -21,6 +24,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequiredArgsConstructor()
@@ -31,8 +36,7 @@ public class LibroController {
 
     @GetMapping
     public ResponseEntity<Page<LibroDTO>> mostrarTodosLibros(
-        @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
-        
+            @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
         Page<LibroDTO> resultado = service.mostrarTodos(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(resultado);
     }
@@ -42,12 +46,34 @@ public class LibroController {
         LibroDTO resultado = service.buscarPorTitulo(titulo);
         return ResponseEntity.status(HttpStatus.OK).body(resultado);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<LibroDTO>> buscarPorTituloAutor(@RequestParam String q,
+            @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
+        Page<LibroDTO> resultado = service.buscarPorTituloAutor(q, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(resultado);
+    }
+
+    @GetMapping("/entrefechas")
+    public ResponseEntity<Page<LibroDTO>> buscarEntreFechas(@RequestParam LocalDate inicio, @RequestParam LocalDate termino,
+            @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
+        Page<LibroDTO> resultado = service.buscarEntreFechas(inicio, termino, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(resultado);
+    }
     
     @PostMapping
     public ResponseEntity<LibroDTO> agregarLibro(@Valid @RequestBody LibroDTO dto) {
         LibroDTO resultado = service.agregarLibro(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
+
+    @PostMapping("/search")
+    public ResponseEntity<Page<LibroDTO>> buscarPorGeneroEtiqueta(@Valid @RequestBody GeneroEtiquetaDTO filtros,
+            @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
+        Page<LibroDTO> resultado = service.buscarPorGeneroEtiqueta(filtros, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(resultado);
+    }
+    
 
     @PutMapping
     public ResponseEntity<LibroDTO> actualizarLibro(@Valid @RequestBody LibroDTO dto) {

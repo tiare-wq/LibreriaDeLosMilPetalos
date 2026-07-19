@@ -1,0 +1,34 @@
+server:
+    port: 8081
+
+spring:
+    application:
+        name: lecturas
+
+    output:
+        ansi:
+            enabled: ALWAYS
+
+    datasource:
+        url: jdbc:postgresql://localhost:5432/bd_libro
+        username: postgres
+        password: Tweet
+        driver-class-name: org.postgresql.Driver
+
+    flyway:
+        enabled: TRUE
+        locations: classpath:db/migration 
+
+logging:
+    file:
+        name: logs/libro.log
+        path: logs
+    level:
+        root: DEBUG
+        org:
+            springframework:
+                web: DEBUG
+    logback:
+        rollingpolicy:
+            max-file-size: 8MB
+            max-history: 30
