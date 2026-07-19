@@ -33,3 +33,8 @@ CHECK (LENGTH(opinion) >= 10);
 ALTER TABLE libro
 ADD CONSTRAINT ck_escala_valoracion
 CHECK (valoracion BETWEEN 1.0 AND 5.0);
+
+-- CREAR CHECK TIPOS DE GÉNERO
+ALTER TABLE libro
+ADD CONSTRAINT ck_tipo_genero
+CHECK (genero IN ('LITERARIO', 'NO_LITERARIO'));

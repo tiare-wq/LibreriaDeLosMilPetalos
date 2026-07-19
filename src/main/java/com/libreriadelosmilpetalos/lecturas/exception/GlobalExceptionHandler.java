@@ -39,14 +39,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ResponseError> MethodArgumentNotValidExceptionHandler (MethodArgumentNotValidException ex) {
+    public ResponseEntity<ResponseErrors> MethodArgumentNotValidExceptionHandler (MethodArgumentNotValidException ex) {
         List<IdentifiedError> errores = ex.getBindingResult()
             .getFieldErrors()
             .stream()
             .map(e -> new IdentifiedError(e.getField(), e.getDefaultMessage()))
             .toList();
         
-        ResponseError error = new ResponseError(400,
+        ResponseErrors error = new ResponseErrors(400,
             "BAD REQUEST",
             "Uno o más datos inválidos",
             errores
@@ -59,7 +59,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseError> exceptionHandler (Exception ex) {
         ResponseError error = new ResponseError(500,
             "INTERNAL SERVER ERROR",
-            "Ha ocurrido un error del sistema. Si el problema persiste comuníquese con el administrador.");
+            ex.getMessage());
+            // "Ha ocurrido un error del sistema. Si el problema persiste comuníquese con el administrador."
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

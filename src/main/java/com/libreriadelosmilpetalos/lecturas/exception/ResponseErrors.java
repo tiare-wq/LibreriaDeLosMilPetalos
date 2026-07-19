@@ -1,5 +1,7 @@
 package com.libreriadelosmilpetalos.lecturas.exception;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResponseError {
+public class ResponseErrors {
 
     private int status;
 
@@ -15,4 +17,5 @@ public class ResponseError {
 
     private String message;
 
+    private List<IdentifiedError> errors;
 }

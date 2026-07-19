@@ -10,7 +10,7 @@ spring:
             enabled: ALWAYS
 
     datasource:
-        url: jdbc:postgresql://localhost:5432/bd_libro
+        url: jdbc:postgresql://localhost:5432/BD_LIBRO
         username: postgres
         password: Tweet
         driver-class-name: org.postgresql.Driver
@@ -24,11 +24,11 @@ logging:
         name: logs/libro.log
         path: logs
     level:
-        root: DEBUG
+        root: INFO
         org:
             springframework:
-                web: DEBUG
-    logback:
+                web: INFO
+
         rollingpolicy:
             max-file-size: 8MB
             max-history: 30

@@ -47,7 +47,9 @@ public class LibroService {
             throw new ResourceAlreadyExistsException("El libro ya se encuentra ingresado");
         }
 
+        // INSERTAR DATOS POR DEFECTO
         dto.setFechaIngreso(LocalDate.now());
+        dto.setFechaActualizacion(null);
 
         Libro entidad = LibroMapper.toEntidad(dto);
         entidad = repo.save(entidad);
@@ -76,6 +78,8 @@ public class LibroService {
         log.info("Buscando libro {}", titulo);
 
         String ttlNormalizado = normalizar(titulo);
+        
+        log.debug("enviado: {}, recibido: {}", titulo, ttlNormalizado);
 
         Libro libro = repo.findByTituloIgnoreCase(titulo)
             .orElseThrow(() -> new ResourceNotFoundException("No se encuentra el libro: " + ttlNormalizado));
@@ -123,8 +127,8 @@ public class LibroService {
 
         if (inicio.isAfter(termino)) {
             throw new IllegalArgumentException("La fecha de inicio es posterior a la fecha de término");
-        } else if(inicio.isBefore(LocalDate.parse("01/01/2026"))) {
-            throw new IllegalArgumentException("No hay registros disponibles antes de la fecha 2026");
+        } else if(inicio.isBefore(LocalDate.parse("01/01/2024"))) {
+            throw new IllegalArgumentException("No hay registros disponibles antes de la fecha 2024");
         } else if (termino.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("El rango de fechas no es válido");
         }
@@ -141,10 +145,19 @@ public class LibroService {
         log.info("Actualizando libro");
         log.debug("dto: {}", dto);
 
-        LibroDTO libro = normalizarLibro(dto);
+        LibroDTO normalizado = normalizarLibro(dto);
 
         Libro entidad = repo.findByTituloIgnoreCase(dto.getTitulo())
-            .orElseThrow(() -> new ResourceNotFoundException("No se encuentra el libro: " + libro.getTitulo()));
+            .orElseThrow(() -> new ResourceNotFoundException("No se encuentra el libro: " + normalizado.getTitulo()));
+
+        if (!normalizado.getTitulo().equalsIgnoreCase(entidad.getTitulo())) {
+            if (repo.existsByTituloIgnoreCase(normalizado.getTitulo()))
+                throw new ResourceAlreadyExistsException("Ya se encuentra el libro");
+        }
+
+        if (dto.getFechaIngreso().isBefore(LocalDate.parse("01/01/2024"))) {
+            throw new IllegalArgumentException("Fecha de ingreso permitidas desde 2024 hasta la fecha");
+        }
 
         dto.setFechaActualizacion(LocalDate.now());
 
@@ -183,10 +196,13 @@ public class LibroService {
             return text;
         }
 
-        return text
+        String enviado = text
             .trim()
             .replaceAll("-+", " ")
+            .replaceAll("(%20)+", " ")
             .replaceAll("\\s+-", " ");
+
+        return enviado;
     }
     
     public LibroDTO normalizarLibro(LibroDTO dto) {
