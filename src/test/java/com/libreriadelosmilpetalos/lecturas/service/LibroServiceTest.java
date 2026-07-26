@@ -2,8 +2,9 @@ package com.libreriadelosmilpetalos.lecturas.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,21 +88,24 @@ public class LibroServiceTest {
         etiDTO2.setDescripcion(RepoEtiquetas.AMISTAD);
 
         etiquetas = List.of(eti1, eti2);
-
         etiquetasDTO = List.of(etiDTO1, etiDTO2);
 
+        entidad.setEtiquetas(etiquetas);
+        dto.setEtiquetas(etiquetasDTO);
     }
 
     // ==========================================
     // MÉTODOS DE AGREGAR
     // ==========================================
 
-    @Test
-    void agregarLibro_HappyPath() {
+    /* @Test
+    void agregarLibro_DeberiaGuardarLibro() {
+
+        when(repo.existsByTituloIgnoreCase(dto.getTitulo())).thenReturn(false);
 
         when(repo.save(any(Libro.class))).thenReturn(entidad);
 
-        when(etiService.normalizarEtiquetas(entidad, etiquetasDTO)).thenReturn(etiquetas);
+        when(etiService.normalizarEtiquetas(eq(entidad), eq(etiquetasDTO))).thenReturn(etiquetas);
 
         when(etiService.agregarEtiquetas(etiquetas)).thenReturn(etiquetasDTO);
 
@@ -109,14 +113,60 @@ public class LibroServiceTest {
 
         assertNotNull(resultado);
 
-        assertEquals(null, dto.getFechaActualizacion());
-        assertEquals(LocalDate.now(), dto.getFechaIngreso());
-        assertEquals(2, dto.getEtiquetas().size());
+        assertNull(resultado.getFechaActualizacion());
+        assertEquals(LocalDate.now(), resultado.getFechaIngreso());
+        assertEquals(2, resultado.getEtiquetas().size());
         assertEquals("AMISTAD", resultado.getEtiquetas().get(1).getDescripcion());
 
         verify(repo).save(any(Libro.class));
-    }
+    } */
 
+    @Test
+    void agregarLibro_DeberiaGuardarLibro() {
+
+        // Arrange
+        dto.setEtiquetas(etiquetasDTO);
+
+        when(repo.existsByTituloIgnoreCase(dto.getTitulo()))
+                .thenReturn(false);
+
+        when(repo.save(any(Libro.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(etiService.normalizarEtiquetas(
+                any(Libro.class),
+                eq(etiquetasDTO)))
+                .thenReturn(etiquetas);
+
+        when(etiService.agregarEtiquetas(etiquetas))
+                .thenReturn(etiquetasDTO);
+
+        // Act
+        LibroDTO resultado = libroService.agregarLibro(dto);
+
+        // Assert
+        assertNotNull(resultado);
+
+        assertEquals(dto.getTitulo(), resultado.getTitulo());
+        assertEquals(dto.getAutor(), resultado.getAutor());
+        assertEquals(dto.getOpinion(), resultado.getOpinion());
+        assertEquals(dto.getValoracion(), resultado.getValoracion());
+        assertEquals(dto.getGenero(), resultado.getGenero());
+
+        assertEquals(LocalDate.now(), resultado.getFechaIngreso());
+        assertNull(resultado.getFechaActualizacion());
+
+        assertEquals(2, resultado.getEtiquetas().size());
+        assertEquals(RepoEtiquetas.ADULTO_JOVEN,
+                resultado.getEtiquetas().get(0).getDescripcion());
+        assertEquals(RepoEtiquetas.AMISTAD,
+                resultado.getEtiquetas().get(1).getDescripcion());
+
+        verify(repo).existsByTituloIgnoreCase(dto.getTitulo());
+        verify(repo).save(any(Libro.class));
+        verify(etiService).normalizarEtiquetas(any(Libro.class), eq(etiquetasDTO));
+        verify(etiService).agregarEtiquetas(etiquetas);
+    }
     // ==========================================
     // MÉTODOS DE BÚSQUEDA
     // ==========================================

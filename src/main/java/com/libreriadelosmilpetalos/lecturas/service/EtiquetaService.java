@@ -33,7 +33,7 @@ public class EtiquetaService {
         log.debug("Agregando etiquetas: {}", entidades);
 
         if (entidades.size() > 10) {
-            throw new IllegalArgumentException("Un libro no puede tener más de 10 etiquetas");
+            throw new IllegalArgumentException("Límite excedido. Máximo 10 etiquetas.");
         }
 
         entidades = repo.saveAll(entidades);

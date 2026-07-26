@@ -29,6 +29,7 @@ logging:
             springframework:
                 web: INFO
 
+    logback:
         rollingpolicy:
             max-file-size: 8MB
             max-history: 30
